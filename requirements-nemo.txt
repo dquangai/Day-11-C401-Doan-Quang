@@ -1,0 +1,4 @@
+# Optional dependency for Part 2C: NeMo Guardrails.
+# On Windows, pip may need Microsoft C++ Build Tools because NeMo pulls in annoy.
+nemoguardrails>=0.10.0
+langchain-google-genai>=2.0.0

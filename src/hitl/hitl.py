@@ -65,32 +65,42 @@ class ConfidenceRouter:
         Returns:
             RoutingDecision with routing action and metadata
         """
-        # TODO 12: Implement routing logic
-        #
-        # 1. Check if action_type is in HIGH_RISK_ACTIONS
-        #    -> If yes: always escalate (action="escalate", priority="high",
-        #       requires_human=True, reason="High-risk action: {action_type}")
-        #
-        # 2. Check confidence thresholds:
-        #    - confidence >= 0.9:
-        #      action="auto_send", priority="low",
-        #      requires_human=False, reason="High confidence"
-        #
-        #    - 0.7 <= confidence < 0.9:
-        #      action="queue_review", priority="normal",
-        #      requires_human=True, reason="Medium confidence — needs review"
-        #
-        #    - confidence < 0.7:
-        #      action="escalate", priority="high",
-        #      requires_human=True, reason="Low confidence — escalating"
+        confidence = max(0.0, min(1.0, confidence))
+
+        if action_type in HIGH_RISK_ACTIONS:
+            return RoutingDecision(
+                action="escalate",
+                confidence=confidence,
+                reason=f"High-risk banking action requires human approval: {action_type}",
+                priority="high",
+                requires_human=True,
+            )
+
+        if confidence >= self.HIGH_THRESHOLD:
+            return RoutingDecision(
+                action="auto_send",
+                confidence=confidence,
+                reason="High confidence and low-risk action",
+                priority="low",
+                requires_human=False,
+            )
+
+        if confidence >= self.MEDIUM_THRESHOLD:
+            return RoutingDecision(
+                action="queue_review",
+                confidence=confidence,
+                reason="Medium confidence - human review prevents ambiguous advice",
+                priority="normal",
+                requires_human=True,
+            )
 
         return RoutingDecision(
-            action="auto_send",
+            action="escalate",
             confidence=confidence,
-            reason="TODO: implement routing logic",
-            priority="low",
-            requires_human=False,
-        )  # TODO: Replace with implementation
+            reason="Low confidence - escalate before giving banking guidance",
+            priority="high",
+            requires_human=True,
+        )
 
 
 # ============================================================
@@ -109,27 +119,27 @@ class ConfidenceRouter:
 hitl_decision_points = [
     {
         "id": 1,
-        "name": "TODO: Name this decision point",
-        "trigger": "TODO: When does this trigger?",
-        "hitl_model": "TODO: human-in-the-loop / human-on-the-loop / human-as-tiebreaker",
-        "context_needed": "TODO: What does the reviewer need to see?",
-        "example": "TODO: Give a concrete example scenario",
+        "name": "High-value money movement approval",
+        "trigger": "Any transfer, withdrawal, beneficiary change, or payment above the configured risk threshold.",
+        "hitl_model": "human-in-the-loop",
+        "context_needed": "Customer identity checks, account history, destination account, amount, fraud flags, and the drafted assistant response.",
+        "example": "A customer asks to transfer 500,000,000 VND to a new beneficiary created five minutes ago.",
     },
     {
         "id": 2,
-        "name": "TODO: Name this decision point",
-        "trigger": "TODO: When does this trigger?",
-        "hitl_model": "TODO: human-in-the-loop / human-on-the-loop / human-as-tiebreaker",
-        "context_needed": "TODO: What does the reviewer need to see?",
-        "example": "TODO: Give a concrete example scenario",
+        "name": "Ambiguous identity or account recovery",
+        "trigger": "Password reset, phone change, KYC mismatch, or recovery request with medium or low confidence.",
+        "hitl_model": "human-as-tiebreaker",
+        "context_needed": "KYC records, recent login devices, failed verification attempts, customer-provided evidence, and policy checklist.",
+        "example": "A user cannot pass OTP but asks to change the registered phone number before a card replacement.",
     },
     {
         "id": 3,
-        "name": "TODO: Name this decision point",
-        "trigger": "TODO: When does this trigger?",
-        "hitl_model": "TODO: human-in-the-loop / human-on-the-loop / human-as-tiebreaker",
-        "context_needed": "TODO: What does the reviewer need to see?",
-        "example": "TODO: Give a concrete example scenario",
+        "name": "Safety anomaly monitoring",
+        "trigger": "Repeated prompt injection, possible credential leakage, unusually high block rate, or output judge failure.",
+        "hitl_model": "human-on-the-loop",
+        "context_needed": "Conversation transcript, matched safety rules, user/session history, output before redaction, and monitoring metrics.",
+        "example": "One session sends five encoded requests asking for the system prompt and then attempts a fake CISO escalation.",
     },
 ]
 

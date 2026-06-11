@@ -56,6 +56,14 @@ export GOOGLE_API_KEY="your-api-key-here"
 jupyter notebook notebooks/lab11_guardrails_hitl.ipynb
 ```
 
+Optional NeMo Guardrails setup for Part 2C:
+
+```bash
+pip install -r requirements-nemo.txt
+```
+
+On Windows, this optional install may fail while building `annoy` unless Microsoft C++ Build Tools is installed. If you do not need Part 2C locally, skip this optional file; the Python modules will continue without NeMo.
+
 ### Local (Python modules — no Colab needed)
 
 ```bash
@@ -78,6 +86,8 @@ python guardrails/output_guardrails.py
 python testing/testing.py
 python hitl/hitl.py
 ```
+
+To run the optional NeMo section locally, install `../requirements-nemo.txt` after installing Microsoft C++ Build Tools on Windows.
 
 ### Tools Used
 
